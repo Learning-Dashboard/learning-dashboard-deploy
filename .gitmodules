@@ -3,10 +3,10 @@
 	url = https://github.com/Learning-Dashboard/LD-learning-dashboard.git
 [submodule "ld_admintool"]
 	path = ld_admintool
-	url = https://github.com/geerardferrer/ld_admintool.git
+	url = https://github.com/Learning-Dashboard/LD_admintool.git
 [submodule "ld_admintool_frontend"]
 	path = ld_admintool_frontend
-	url = https://github.com/geerardferrer/ld_admintool_frontend.git
+	url = https://github.com/Learning-Dashboard/LD_admintool_frontend.git
 [submodule "LD_Connect_Event"]
 	path = LD_Connect_Event
 	url = https://github.com/Learning-Dashboard/LD_Connect_Event.git
