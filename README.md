@@ -1,50 +1,50 @@
 # Learning Dashboard - Data Infrastructure Integration
-## Integració d'una Nova Infraestructura de Dades al Learning Dashboard
+## Integration of a New Data Infrastructure into the Learning Dashboard
 
-Este repositorio contiene la infraestructura completa del ecosistema Learning Dashboard, incluyendo todos los servicios dockerizados, bases de datos, webhooks y herramientas de administración.
+This repository contains the complete infrastructure of the Learning Dashboard ecosystem, including all dockerized services, databases, webhooks, and administration tools.
 
-## 📋 Índice
+## 📋 Table of Contents
 
-- [Arquitectura del Sistema](#arquitectura-del-sistema)
-- [Requisitos Previos](#requisitos-previos)
-- [Instalación Rápida](#instalación-rápida)
-- [Configuración](#configuración)
-- [Servicios Incluidos](#servicios-incluidos)
-- [Uso](#uso)
-- [Desarrollo](#desarrollo)
+- [System Architecture](#system-architecture)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Included Services](#included-services)
+- [Usage](#usage)
+- [Development](#development)
 - [Troubleshooting](#troubleshooting)
 
-## 🏗️ Arquitectura del Sistema
+## 🏗️ System Architecture
 
-El ecosistema consta de **7 servicios interconectados** que trabajan juntos para proporcionar un sistema completo de análisis y gestión del Learning Dashboard:
+The ecosystem consists of **7 interconnected services** that work together to provide a complete analysis and management system for the Learning Dashboard:
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│                     LEARNING DASHBOARD ECOSYSTEM                    │
-│                                                                     │
-│  ┌─────────────────┐                        ┌─────────────────┐   │
-│  │  Admin Tool     │──────────┐             │  LD Frontend    │   │
-│  │  Frontend       │          │             │  (Tomcat UI)    │   │
-│  │  (React+Vite)   │          │             └────────┬────────┘   │
-│  └────────┬────────┘          │                      │             │
-│           │                   │                      │             │
-│           ├──────────────┐    │                      │             │
-│           │              │    │                      │             │
-│           ▼              ▼    ▼                      ▼             │
+┌──────────────────────────────────────────────────────────────────┐
+│                     LEARNING DASHBOARD ECOSYSTEM                 │
+│                                                                  │
+│  ┌─────────────────┐                        ┌─────────────────┐  │
+│  │  Admin Tool     │──────────┐             │  LD Frontend    │  │
+│  │  Frontend       │          │             │  (Tomcat UI)    │  │
+│  │  (React+Vite)   │          │             └───────┬─────────┘  │
+│  └────────┬────────┘          │                     │            │
+│           │                   │                     │            │
+│           ├──────────────┐    │                     │            │
+│           │              │    │                     │            │
+│           ▼              ▼    ▼                     ▼            │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐   │
 │  │  Admin Tool     │  │   LD Eval       │  │   Tomcat        │   │
 │  │  Backend        │  │   (Metrics &    │  │   (LD Core)     │   │
 │  │  (Spring Boot)  │  │   Evaluation)   │  └────────┬────────┘   │
-│  └────────┬────────┘  └────────┬────────┘           │             │
-│           │                    │                    │             │
-│           │                    │                    │             │
-│           │                    │                    │             │
-│           ▼                    │                    ▼             │
+│  └────────┬────────┘  └────────┬────────┘           │            │
+│           │                    │                    │            │
+│           │                    │                    │            │
+│           │                    │                    │            │
+│           ▼                    │                    ▼            │
 │  ┌─────────────────┐           │           ┌─────────────────┐   │
 │  │   Tomcat        │           │           │  PostgreSQL     │   │
 │  │   (LD Backend)  │◄──────────┘           │  (SQL Data)     │   │
 │  └────────┬────────┘                       └─────────────────┘   │
-│           │                                                       │
+│           │                                                      │
 │           ▼                                ┌─────────────────┐   │
 │  ┌─────────────────┐                       │   MongoDB       │   │
 │  │  PostgreSQL     │             ┌────────►│  (Metrics &     │   │
@@ -63,99 +63,98 @@ El ecosistema consta de **7 servicios interconectados** que trabajan juntos para
 │                         │   (Webhooks)    │                      │
 │                         └────────▲────────┘                      │
 │                                  │                               │
-│  ┌───────────────────────────────┴──────────────────────────┐   │
+│  ┌───────────────────────────────┴───────────────────────────┐   │
 │  │                    EXTERNAL SOURCES                       │   │
-│  │                                                            │   │
-│  │  ┌──────────────┐              ┌──────────────┐          │   │
-│  │  │   GitHub     │              │    Taiga     │          │   │
-│  │  │  (Webhooks)  │              │  (Webhooks)  │          │   │
-│  │  └──────────────┘              └──────────────┘          │   │
-│  └────────────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────┘
+│  │                                                           │   │
+│  │  ┌──────────────┐              ┌──────────────┐           │   │
+│  │  │   GitHub     │              │    Taiga     │           │   │
+│  │  │  (Webhooks)  │              │  (Webhooks)  │           │   │
+│  │  └──────────────┘              └──────────────┘           │   │
+│  └───────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-### Flujo de Datos
+### Data Flow
 
-**1. Captura de Eventos (LD Connect):**
-   - Recibe webhooks de **GitHub** (push, pull requests)
-   - Recibe webhooks de **Taiga** (tasks, milestones)
-   - Notifica a **LD Eval** para procesamiento
+**1. Event Capture (LD Connect):**
+   - Receives webhooks from **GitHub** (push, pull requests)
+   - Receives webhooks from **Taiga** (tasks, milestones)
+   - Notifies **LD Eval** for processing
 
-**2. Procesamiento de Métricas (LD Eval):**
-   - Evalúa los cambios recibidos
-   - Calcula métricas y factores de calidad
-   - Almacena resultados en **MongoDB**
+**2. Metrics Processing (LD Eval):**
+   - Evaluates received changes
+   - Calculates metrics and quality factors
+   - Stores results in **MongoDB**
 
-**3. Visualización Principal (Frontend LD):**
-   - Muestra métricas y factores desde **MongoDB**
-   - Muestra datos de proyectos desde **PostgreSQL**
-   - Interfaz accesible vía **Tomcat**
+**3. Main Visualization (LD Frontend):**
+   - Displays metrics and factors from **MongoDB**
+   - Displays project data from **PostgreSQL**
+   - Interface accessible via **Tomcat**
 
-**4. Administración (Admin Tool):**
-   - **Frontend**: Interfaz React para gestionar equipos
-   - **Backend**: API Spring Boot para operaciones administrativas
-   - Conecta con **Tomcat (LD Backend)** para acceder a datos
-   - Conecta directamente con **LD Eval** para ciertas consultas
-   - Todo respaldado por **PostgreSQL**
+**4. Administration (Admin Tool):**
+   - **Frontend**: React interface for managing teams
+   - **Backend**: Spring Boot API for administrative operations
+   - Connects to **Tomcat (LD Backend)** to access data
+   - Connects directly to **LD Eval** for certain queries
+   - All backed by **PostgreSQL**
 
-## 📦 Requisitos Previos
+## 📦 Prerequisites
 
-- **Docker Desktop** (Windows/Mac) o Docker Engine (Linux)
-- **Docker Compose** v2.0 o superior
-- **Git** para clonar los submódulos
-- **Puertos disponibles**: 5000, 5001, 5432, 5433, 8080, 8888, 27017, 3000
+- **Docker Desktop** (Windows/Mac) or Docker Engine (Linux)
+- **Docker Compose** v2.0 or higher
+- **Git** to clone the repository and its submodules
+- **Available ports**: 5000, 5001, 5432, 5433, 8080, 8888, 27017, 3000
 
-## 🚀 Instalación Rápida
+## 🚀 Quick Start
 
-### 1. Clonar el repositorio
+### 1. Clone the repository with its submodules
 
 ```bash
-git clone <URL_DE_TU_REPO>
-cd learning-dashboard-infrastructure
+git clone --recurse-submodules https://github.com/Learning-Dashboard/learning-dashboard-deploy.git
+cd learning-dashboard-deploy
 ```
 
-### 2. Clonar los submódulos (repositorios internos)
+This command downloads the main repository and also automatically initializes the required submodules.
 
-Los repositorios de cada servicio deben estar en sus carpetas correspondientes:
+### 2. Initialize submodules if you already cloned without `--recurse-submodules`
+
+If you already ran `git clone` without including the submodules, you can download them afterwards with:
 
 ```bash
-# Si aún no los tienes clonados:
-git clone <URL_LD_LEARNING_DASHBOARD> LD-learning-dashboard
-git clone <URL_LD_ADMINTOOL> ld_admintool
-git clone <URL_LD_ADMINTOOL_FRONTEND> ld_admintool_frontend
-git clone <URL_LD_CONNECT_EVENT> LD_Connect_Event
-git clone <URL_LD_EVAL_EVENT> LD_Eval_Event
+git submodule update --init --recursive
 ```
 
-### 3. Configurar variables de entorno
+### 3. Configure environment variables
 
-Copia el archivo de ejemplo y edítalo con tus valores:
+Copy the example file and edit it with your values:
 
 ```bash
 cp .env.template .env
 ```
 
-Edita el archivo `.env` con tus configuraciones (ver [Configuración](#configuración)).
+Edit the `.env` file with your settings (see [Configuration](#configuration)).
 
-### 4. Iniciar todos los servicios
-
-```bash
-docker-compose up -d
-```
-
-### 5. Verificar que todo funciona
+### 4. Start all services
 
 ```bash
-docker-compose ps
+docker compose up -d
 ```
 
-Deberías ver todos los servicios en estado "Up".
+Use `docker compose` **without a hyphen**. That is the current Docker Compose v2 syntax.
 
-## ⚙️ Configuración
+### 5. Verify everything is working
 
-### Archivo `.env` principal
+```bash
+docker compose ps
+```
 
-El archivo `.env` en la raíz contiene **toda la configuración centralizada**:
+You should see all services with a "Up" status.
+
+## ⚙️ Configuration
+
+### Main `.env` file
+
+The `.env` file at the root contains **all centralized configuration**:
 
 ```env
 # URLs de túneles ngrok (cambiar según sea necesario)
@@ -180,65 +179,65 @@ DB_USER=postgres
 DB_PASSWORD=example
 ```
 
-**Importante**: 
-- `TAIGA_API_URL` apunta al ngrok del Taiga FIB (para consultas)
-- `TAIGA_AUTH_URL` apunta siempre a Taiga público (para autenticación)
-- **Nunca** subas el archivo `.env` a Git (está en `.gitignore`)
+**Important**:
+- `TAIGA_API_URL` points to the FIB Taiga ngrok (for queries)
+- `TAIGA_AUTH_URL` always points to public Taiga (for authentication)
+- **Never** commit the `.env` file to Git (it is listed in `.gitignore`)
 
-## 🔧 Servicios Incluidos
+## 🔧 Included Services
 
-| Servicio | Puerto | Descripción | Tecnología |
-|----------|--------|-------------|------------|
-| **Admin Tool Frontend** | 3000 | Interfaz de administración | React + Vite + Nginx |
-| **Admin Tool Backend** | 8080 | API de administración | Spring Boot 3.5.6 (Java 17) |
-| **LD Connect** | 5000 | Gestión de webhooks GitHub/Taiga | Python 3.9 + Flask |
-| **LD Eval** | 5001 | Evaluación y métricas | Python 3.9 + Flask |
-| **Tomcat (LD Core)** | 8888 | Learning Dashboard principal | Java + Tomcat 9 |
-| **PostgreSQL** | 5433 | Base de datos principal | PostgreSQL 9.6 |
-| **MongoDB** | 27017 | Base de datos de eventos | MongoDB 6.0 |
+| Service | Port | Description | Technology |
+|---------|------|-------------|------------|
+| **Admin Tool Frontend** | 3000 | Administration interface | React + Vite + Nginx |
+| **Admin Tool Backend** | 8080 | Administration API | Spring Boot 3.5.6 (Java 17) |
+| **LD Connect** | 5000 | GitHub/Taiga webhook management | Python 3.9 + Flask |
+| **LD Eval** | 5001 | Evaluation and metrics | Python 3.9 + Flask |
+| **Tomcat (LD Core)** | 8888 | Main Learning Dashboard | Java + Tomcat 9 |
+| **PostgreSQL** | 5433 | Main database | PostgreSQL 9.6 |
+| **MongoDB** | 27017 | Events database | MongoDB 6.0 |
 
-## 📖 Uso
+## 📖 Usage
 
-### Acceder a las interfaces
+### Accessing the interfaces
 
 - **Admin Tool**: http://localhost:3000
 - **Learning Dashboard**: http://localhost:8888
-- **MongoDB Compass**: localhost:27017 (usuario: `admin`, contraseña: `3LnS985q7tR9`)
+- **MongoDB Compass**: localhost:27017 (user: `admin`, password: `3LnS985q7tR9`)
 
-### Importar equipos desde Excel
+### Importing teams from Excel
 
-1. Accede al Admin Tool en http://localhost:3000
-2. Ve a la sección "Importar Equipos"
-3. Sube un archivo Excel con el formato especificado
-4. El sistema validará los proyectos en Taiga y GitHub
-5. Los equipos se crearán automáticamente en el LD
+1. Go to the Admin Tool at http://localhost:3000
+2. Navigate to the "Import Teams" section
+3. Upload an Excel file with the specified format
+4. The system will validate the projects in Taiga and GitHub
+5. Teams will be created automatically in the LD
 
 ### Webhooks
 
-Los webhooks de GitHub y Taiga envían eventos automáticamente a LD Connect cuando hay cambios:
+GitHub and Taiga webhooks automatically send events to LD Connect when changes occur:
 
-- **GitHub webhook URL**: `{NGROK_LDCONNECT_URL}/webhook/github?prj=nombre-proyecto`
-- **Taiga webhook URL**: `{NGROK_LDCONNECT_URL}/webhook/taiga?prj=nombre-proyecto`
+- **GitHub webhook URL**: `{NGROK_LDCONNECT_URL}/webhook/github?prj=project-name`
+- **Taiga webhook URL**: `{NGROK_LDCONNECT_URL}/webhook/taiga?prj=project-name`
 
-## 🛠️ Desarrollo
+## 🛠️ Development
 
-### Reconstruir un servicio específico
+### Rebuild a specific service
 
 ```bash
-# Backend del Admin Tool
-docker-compose build admintool_backend
-docker-compose up -d admintool_backend
+# Admin Tool Backend
+docker compose build admintool_backend
+docker compose up -d admintool_backend
 
-# Frontend del Admin Tool
-docker-compose build admintool_frontend
-docker-compose up -d admintool_frontend
+# Admin Tool Frontend
+docker compose build admintool_frontend
+docker compose up -d admintool_frontend
 
 # LD Connect
-docker-compose build ld_connect
-docker-compose up -d ld_connect
+docker compose build ld_connect
+docker compose up -d ld_connect
 ```
 
-### Ver logs de un servicio
+### View logs for a service
 
 ```bash
 docker logs -f LDConnect
@@ -246,14 +245,14 @@ docker logs -f ld_admintool_backend
 docker logs -f admintool_frontend
 ```
 
-### Reiniciar todo el sistema
+### Restart the entire system
 
 ```bash
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 ```
 
-### Acceder a la terminal de un contenedor
+### Access a container's terminal
 
 ```bash
 docker exec -it LDConnect bash
@@ -262,87 +261,78 @@ docker exec -it ld_admintool_backend sh
 
 ## 🐛 Troubleshooting
 
-### Los contenedores no arrancan
+### Containers won't start
 
-1. Verifica que Docker Desktop esté corriendo
-2. Comprueba que los puertos no estén ocupados:
+1. Verify that Docker Desktop is running
+2. Check that the required ports are not already in use:
    ```bash
    netstat -ano | findstr :8080
    netstat -ano | findstr :3000
    ```
-3. Revisa los logs:
+3. Review the logs:
    ```bash
-   docker-compose logs
+   docker compose logs
    ```
 
-### Error de autenticación en MongoDB
+### MongoDB authentication error
 
-Si ves errores `Unauthorized` en los logs:
+If you see `Unauthorized` errors in the logs:
 
-1. Verifica que el `.env` tiene las credenciales correctas
-2. Reinicia los servicios:
+1. Verify that the `.env` file has the correct credentials
+2. Restart the services:
    ```bash
-   docker-compose restart ld_connect ld_eval
+   docker compose restart ld_connect ld_eval
    ```
 
-### Error 401 en Taiga API
+### 401 error on Taiga API
 
-Si ves `401 Unauthorized` al consultar milestones:
+If you see `401 Unauthorized` when querying milestones:
 
-- **Causa**: El ngrok del Taiga FIB requiere autenticación
-- **Solución**: Verifica que `TAIGA_API_URL` apunta al ngrok correcto y que el servidor ngrok tiene autenticación desactivada
+- **Cause**: The FIB Taiga ngrok requires authentication
+- **Solution**: Verify that `TAIGA_API_URL` points to the correct ngrok and that the ngrok server has authentication disabled
 
-### Webhooks no funcionan
+### Webhooks not working
 
-1. Verifica que ngrok esté corriendo y la URL sea accesible
-2. Comprueba que el webhook en GitHub/Taiga tenga la URL correcta
-3. Revisa los logs de LD Connect:
+1. Verify that ngrok is running and the URL is accessible
+2. Check that the webhook in GitHub/Taiga has the correct URL
+3. Review the LD Connect logs:
    ```bash
    docker logs LDConnect --tail 50
    ```
 
-### El Admin Tool no conecta con el backend
+### Admin Tool cannot connect to the backend
 
-1. Verifica que el backend esté corriendo:
+1. Verify that the backend is running:
    ```bash
    docker ps | grep admintool
    ```
-2. Comprueba la configuración de Nginx en el frontend
-3. Revisa los logs del backend:
+2. Check the Nginx configuration in the frontend
+3. Review the backend logs:
    ```bash
    docker logs ld_admintool_backend
    ```
 
-## 📚 Documentación Adicional
-- [LD_Connect_Event/README.md](LD_Connect_Event/README.md) - Documentación de LD Connect
-- [LD_Eval_Event/README.md](LD_Eval_Event/README.md) - Documentación de LD Eval
+## 📚 Additional Documentation
+- [LD_Connect_Event/README.md](LD_Connect_Event/README.md) - LD Connect documentation
+- [LD_Eval_Event/README.md](LD_Eval_Event/README.md) - LD Eval documentation
 
-## 🔐 Seguridad
+## 🔐 Security
 
-- **Nunca** subas el archivo `.env` a Git
-- Usa `.env.template` como referencia para crear tu `.env` local
-- Los tokens y contraseñas deben regenerarse en producción
-- MongoDB y PostgreSQL solo son accesibles desde `127.0.0.1` (localhost)
+- **Never** commit the `.env` file to Git
+- Use `.env.template` as a reference to create your local `.env`
+- Tokens and passwords should be regenerated in production
+- MongoDB and PostgreSQL are only accessible from `127.0.0.1` (localhost)
 
-## 📝 Notas para la siguiente persona
+## 📝 Notes for the Next Person
 
-1. **Ngrok URLs**: Los túneles ngrok cambian cada vez que se reinicia ngrok. Actualiza `NGROK_LD_URL` y `NGROK_LDCONNECT_URL` en el `.env` cuando sea necesario.
+1. **Ngrok URLs**: Ngrok tunnels change every time ngrok is restarted. Update `NGROK_LD_URL` and `NGROK_LDCONNECT_URL` in the `.env` when necessary.
 
-2. **Taiga FIB**: Si se cambia su ngrok, actualiza `TAIGA_API_URL` en el `.env`.
+2. **FIB Taiga**: If its ngrok changes, update `TAIGA_API_URL` in the `.env`.
 
-3. **Submódulos Git**: Los repositorios dentro de learning-dashboard-infrastructure (LD-learning-dashboard, ld_admintool, etc.) son repositorios independientes. Puedes hacer commits y push en cada uno por separado.
+3. **Git Submodules**: The repositories inside learning-dashboard-infrastructure (LD-learning-dashboard, ld_admintool, etc.) are independent repositories. You can commit and push in each one separately.
 
-4. **Reconstruir contenedores**: Si cambias código Python o Java, necesitas reconstruir el contenedor correspondiente con `docker-compose build <servicio>`.
+4. **Rebuilding containers**: If you change Python or Java code, you need to rebuild the corresponding container with `docker compose build <service>`.
 
-5. **Base de datos**: Los datos de PostgreSQL y MongoDB se guardan en volúmenes Docker. Persisten aunque reinicies los contenedores.
+5. **Database**: PostgreSQL and MongoDB data is stored in Docker volumes. It persists even if you restart the containers.
 
-## 👥 Autor
-
-- **Gerard Ferrer** - Treball Final de Grau (TFG)
-- **Títol**: Integració d'una Nova Infraestructura de Dades al Learning Dashboard
-- **Universidad**: Universitat Politècnica de Catalunya - Facultat d'Informàtica de Barcelona
-- **Año**: 2025-2026
-
-## 📄 Licencia
-
-[Especificar licencia si aplica]
+## Authors
