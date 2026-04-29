@@ -334,4 +334,4 @@ If you see `401 Unauthorized` when querying milestones:
 6. **Gitflow**: Follow the Gitflow branching model for new features and bug fixes. Create feature branches from `develop` and merge back when done. Then create a release branch from `develop` and merge into `main` for production releases.
 
 ## Authors
-Please check the 
+Please check the [AUTHORS.md](AUTHORS.md) file for a complete list of contributors to the Learning Dashboard project.
