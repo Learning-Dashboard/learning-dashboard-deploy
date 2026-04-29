@@ -312,10 +312,6 @@ If you see `401 Unauthorized` when querying milestones:
    docker logs ld_admintool_backend
    ```
 
-## 📚 Additional Documentation
-- [LD_Connect_Event/README.md](LD_Connect_Event/README.md) - LD Connect documentation
-- [LD_Eval_Event/README.md](LD_Eval_Event/README.md) - LD Eval documentation
-
 ## 🔐 Security
 
 - **Never** commit the `.env` file to Git
@@ -335,4 +331,7 @@ If you see `401 Unauthorized` when querying milestones:
 
 5. **Database**: PostgreSQL and MongoDB data is stored in Docker volumes. It persists even if you restart the containers.
 
+6. **Gitflow**: Follow the Gitflow branching model for new features and bug fixes. Create feature branches from `develop` and merge back when done. Then create a release branch from `develop` and merge into `main` for production releases.
+
 ## Authors
+Please check the 
