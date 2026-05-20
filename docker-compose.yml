@@ -113,7 +113,14 @@ services:
     # Security Shield
     - security.enable=true
     - security.api.enable=true  
+    - security.jwt.secret=${SECURITY_JWT_SECRET}
     - LD_API_KEY=${LD_API_KEY}
+    # CORS for browser frontends. Origins must be explicit, comma-separated URLs.
+    - cors.allowed.origins=${LD_CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+    - cors.allowed.methods=${LD_CORS_ALLOWED_METHODS:-GET,POST,PUT,PATCH,DELETE,OPTIONS}
+    - cors.allowed.headers=${LD_CORS_ALLOWED_HEADERS:-Authorization,Content-Type,X-Requested-With,Accept,Origin,X-LD-API-Key}
+    - cors.exposed.headers=${LD_CORS_EXPOSED_HEADERS:-Authorization,Location}
+    - cors.allow.credentials=${LD_CORS_ALLOW_CREDENTIALS:-false}
     # Anonymization encryption method
     - database.encryption.key=ntw9tA8jwVjAyNMDVIQ4dEAOy87tHRnp
     - database.encryption.initvector=e37ec2589341eb09
