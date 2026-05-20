@@ -172,6 +172,10 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxx
 
 # Learning Dashboard API key
 LD_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Frontend origins allowed to call Learning Dashboard directly
+LD_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 # MongoDB Configuration
 MONGO_USER=admin
@@ -192,6 +196,7 @@ DB_PASSWORD=example
   ```
 
   Store it in the root `.env`. When running `LD_Eval_Event` or `ld_admintool` outside Docker, copy the same value into that module's local `.env` from its example/template file. For `taiga-back`, follow Taiga's existing `settings/config.py` pattern and set `LD_API_KEY` there or in the process environment.
+- `LD_CORS_ALLOWED_ORIGINS` is a comma-separated allowlist of browser origins that may call the Learning Dashboard directly, for example `http://localhost:3000,https://frontend.example.com`.
 - **Never** commit the `.env` file to Git (it is listed in `.gitignore`)
 
 ## 🔧 Included Services
@@ -324,10 +329,28 @@ If you see `401 Unauthorized` when querying milestones:
 
 ## 🔐 Security
 
+### Service-to-service API Key (`X-LD-API-Key`)
+
+The Learning Dashboard REST API (`/api/**`) requires a shared secret on all service-to-service calls, controlled by the `security.api.enable` flag.
+
+**Header:** `X-LD-API-Key: <secret>`
+
+Set `LD_API_KEY` in the root `.env` — Docker Compose propagates it automatically to all affected services. **Public routes** (`/api/serverUrl`, `/api/assessSIUrl`) and browser sessions (JWT cookie) are exempt.
+
+| Service | How it sends the key |
+|---|---|
+| [LD_Eval_Event](https://github.com/Learning-Dashboard/LD_Eval_Event) | `LD_API_KEY` env var → `X-LD-API-Key` header on every outbound LD call |
+| [LD_admintool](https://github.com/Learning-Dashboard/LD_admintool) | `LD_API_KEY` env var → `X-LD-API-Key` header via `LDService` interceptor |
+
+> `LD_Connect_Event` does not call the LD REST API directly and is not affected.
+
+### General
+
 - **Never** commit the `.env` file to Git
 - Use `.env.template` as a reference to create your local `.env`
 - Tokens and passwords should be regenerated in production
 - MongoDB and PostgreSQL are only accessible from `127.0.0.1` (localhost)
+- Learning Dashboard CORS is restricted to `LD_CORS_ALLOWED_ORIGINS`; do not use `*` with credentials enabled.
 
 ## 📝 Notes for the Next Person
 
