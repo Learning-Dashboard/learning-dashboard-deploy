@@ -170,6 +170,9 @@ TAIGA_PASSWORD=tu_password
 # GitHub Configuration
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxx
 
+# Learning Dashboard API key
+LD_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 # MongoDB Configuration
 MONGO_USER=admin
 MONGO_PASSWORD=3LnS985q7tR9
@@ -182,6 +185,13 @@ DB_PASSWORD=example
 **Important**:
 - `TAIGA_API_URL` points to the FIB Taiga ngrok (for queries)
 - `TAIGA_AUTH_URL` always points to public Taiga (for authentication)
+- `LD_API_KEY` protects service-to-service calls to the Learning Dashboard REST API. Generate one with:
+
+  ```bash
+  python3 -c 'import secrets; print(secrets.token_urlsafe(48))'
+  ```
+
+  Store it in the root `.env`. When running `LD_Eval_Event` or `ld_admintool` outside Docker, copy the same value into that module's local `.env` from its example/template file. For `taiga-back`, follow Taiga's existing `settings/config.py` pattern and set `LD_API_KEY` there or in the process environment.
 - **Never** commit the `.env` file to Git (it is listed in `.gitignore`)
 
 ## 🔧 Included Services
