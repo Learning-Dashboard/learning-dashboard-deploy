@@ -2,6 +2,9 @@ FROM tomcat:9.0.16-jre8
 
 #BY Karol Z., Marti M., Marc O.
 
+#todo: gradle compile 
+
+
 RUN addgroup -g 82 -S www-data ;\
     addgroup root www-data && exit 0 ; exit 1
 
