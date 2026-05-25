@@ -113,6 +113,7 @@ services:
     # Security Shield
     - security.enable=true
     - security.api.enable=true  
+    - LD_API_KEY=${LD_API_KEY}
     # Anonymization encryption method
     - database.encryption.key=ntw9tA8jwVjAyNMDVIQ4dEAOy87tHRnp
     - database.encryption.initvector=e37ec2589341eb09
@@ -196,6 +197,9 @@ services:
     container_name: ldeval
     env_file:
       - ./LD_Eval_Event/.env
+    environment:
+      - BASE_GESSI_URL=http://tomcat:8080/api
+      - LD_API_KEY=${LD_API_KEY}
     networks:
       - qrapids                 
     depends_on:
@@ -218,8 +222,9 @@ services:
     container_name: ld_admintool_backend
     environment:
       - SERVER_PORT=${ADMINTOOL_PORT:-8080}
-      - LD_API_URL=http://tomcat:8080/api
-      - LD_EVAL_URL=http://ld_eval:5001
+      - ADMINTOOL_LD_API_URL=http://tomcat:8080/api
+      - LD_API_KEY=${LD_API_KEY}
+      - ADMINTOOL_EVAL_URL=http://ld_eval:5001
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
