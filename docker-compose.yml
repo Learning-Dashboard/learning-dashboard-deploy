@@ -136,6 +136,8 @@ services:
     - jasperServer.url=
     - jasperserver.user=
     - jasperserver.password=
+    env_file:
+      - ./.env
     ports:
     - "${WEB_PORT}:8080"
     logging:
