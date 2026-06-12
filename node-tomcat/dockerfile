@@ -2,12 +2,4 @@ FROM tomcat:9.0.118-jre21-temurin
 
 #BY Karol Z., Marti M., Marc O.
 
-#todo: gradle compile 
-
-
-RUN set -eux; \
-    if ! getent group www-data >/dev/null; then groupadd www-data; fi; \
-    usermod -a -G www-data root; \
-    mkdir -p /home/pabre-db; \
-    chown root:www-data /home/pabre-db; \
-    chmod g+w /home/pabre-db
+#todo: gradle compile

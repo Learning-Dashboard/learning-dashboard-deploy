@@ -99,7 +99,6 @@ services:
     - qma.username=admin
     - qma.password=3LnS985q7tR9
     # Endpoints
-    - pabre.url=http://gessi3.cs.upc.edu/pabre-ws
     - assessSI.url=http://tomcat:8080/LD-si_assessment-rest-0.1
     - backlog.milestones.url=
     - backlog.newIssue.url=
@@ -164,7 +163,6 @@ services:
     - ${COMPOSE_PROJECT_HOME}/www/api/config:${QRAPIDS_CONFIG_DIR}
     - ${COMPOSE_PROJECT_HOME}/www/api/data:${QRAPIDS_DATA_DIR}
     - ${COMPOSE_PROJECT_HOME}/node-tomcat/setenv.sh:/usr/local/tomcat/bin/setenv.sh:ro
-    - ${COMPOSE_PROJECT_HOME}/www/api/pabreDatabase:/home/pabre-db
     networks:
     - qrapids
 
