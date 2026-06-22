@@ -201,7 +201,7 @@ services:
       - ./LD_Eval_Event:/app
     container_name: ldeval
     env_file:
-      - ./LD_Eval_Event/.env
+      - ./.env
     environment:
       - BASE_GESSI_URL=http://tomcat:8080/api
       - LD_API_KEY=${LD_API_KEY}
