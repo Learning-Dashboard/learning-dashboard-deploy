@@ -4,12 +4,16 @@
 [submodule "ld_admintool"]
 	path = ld_admintool
 	url = https://github.com/Learning-Dashboard/LD_admintool.git
+	branch = main
 [submodule "ld_admintool_frontend"]
 	path = ld_admintool_frontend
 	url = https://github.com/Learning-Dashboard/LD_admintool_frontend.git
+	branch = main
 [submodule "LD_Connect_Event"]
 	path = LD_Connect_Event
 	url = https://github.com/Learning-Dashboard/LD_Connect_Event.git
+	branch = main
 [submodule "LD_Eval_Event"]
 	path = LD_Eval_Event
 	url = https://github.com/Learning-Dashboard/LD_Eval_Event.git
+	branch = main
