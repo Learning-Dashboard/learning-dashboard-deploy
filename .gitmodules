@@ -1,6 +1,7 @@
 [submodule "LD-learning-dashboard"]
 	path = LD-learning-dashboard
 	url = https://github.com/Learning-Dashboard/LD-learning-dashboard.git
+	branch = master
 [submodule "ld_admintool"]
 	path = ld_admintool
 	url = https://github.com/Learning-Dashboard/LD_admintool.git
