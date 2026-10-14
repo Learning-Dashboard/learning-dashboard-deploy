@@ -97,7 +97,7 @@ services:
     - qma.port=27017
     - qma.database.name=mongo
     - qma.username=admin
-    - qma.password=3LnS985q7tR9
+    - qma.password=${MONGO_INITDB_ROOT_PASSWORD}
     # Endpoints
     - assessSI.url=http://tomcat:8080/LD-si_assessment-rest-0.1
     - backlog.milestones.url=
@@ -165,6 +165,7 @@ services:
     - ${COMPOSE_PROJECT_HOME}/node-tomcat/setenv.sh:/usr/local/tomcat/bin/setenv.sh:ro
     networks:
     - qrapids
+    - ld-taiga
 
   ld_connect:
     build:
@@ -174,7 +175,10 @@ services:
     env_file:
       - ./.env         
     networks:
-      - qrapids 
+      qrapids: {}
+      ld-taiga:
+          aliases:
+            - ldconnect.internal
     environment:
       - EVAL_HOST=ld_eval
       - EVAL_PORT=5001
@@ -230,6 +234,7 @@ services:
       - ADMINTOOL_LD_API_URL=http://tomcat:8080/api
       - LD_API_KEY=${LD_API_KEY}
       - ADMINTOOL_EVAL_URL=http://ld_eval:5001
+      - ADMINTOOL_LD_CONNECT_URL=http://ld_connect:5000
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
@@ -239,6 +244,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
     networks:
       - qrapids
+      - ld-taiga
     depends_on:
       db:
         condition: service_started
@@ -283,6 +289,8 @@ services:
 networks:
   qrapids:
     driver: bridge
+  ld-taiga:
+    external: true
 volumes:
   postgresql:
   mongo_data:
