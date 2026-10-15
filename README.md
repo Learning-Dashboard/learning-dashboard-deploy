@@ -179,7 +179,7 @@ LD_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 # MongoDB Configuration
 MONGO_USER=admin
-MONGO_PASSWORD=3LnS985q7tR9
+MONGO_PASSWORD=xxxxxxxxxxxxxxxxx
 
 # PostgreSQL Configuration
 DB_USER=postgres
