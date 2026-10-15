@@ -21,7 +21,7 @@ services:
     - DB_USER
     - DB_PASSWORD
     - DB_LOCALE
-    - POSTGRES_HOST_AUTH_METHOD=trust
+    - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
     ports:
     - "127.0.0.1:${DB_PORT}:5432"
     logging:
@@ -91,13 +91,13 @@ services:
     - spring.datasource.platform=postgres
     - spring.datasource.url=jdbc:postgresql://db:5432/postgres
     - spring.datasource.username=postgres
-    - spring.datasource.password=example
+    - spring.datasource.password=${DB_PASSWORD}
     # QMA (Quality Model Assessment), connection to the MongoDB database
     - qma.ip=mongodb
     - qma.port=27017
     - qma.database.name=mongo
     - qma.username=admin
-    - qma.password=${MONGO_INITDB_ROOT_PASSWORD}
+    - qma.password=${MONGO_PASS}
     # Endpoints
     - assessSI.url=http://tomcat:8080/LD-si_assessment-rest-0.1
     - backlog.milestones.url=
@@ -121,8 +121,8 @@ services:
     - cors.exposed.headers=${LD_CORS_EXPOSED_HEADERS:-Authorization,Location}
     - cors.allow.credentials=${LD_CORS_ALLOW_CREDENTIALS:-false}
     # Anonymization encryption method
-    - database.encryption.key=ntw9tA8jwVjAyNMDVIQ4dEAOy87tHRnp
-    - database.encryption.initvector=e37ec2589341eb09
+    - database.encryption.key=${DATABASE_ENCRYPTION_KEY}
+    - database.encryption.initvector=${DATABASE_ENCRYPTION_IV}
     - database.encryption.algorithm=AES/CBC/PKCS5PADDING
     # Forecast
     - forecast.technique=PROPHET
