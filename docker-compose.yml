@@ -225,6 +225,7 @@ services:
   # LD ADMIN TOOL - Backend (Spring Boot)
   # ============================================
   admintool_backend:
+    profiles: ["admin"]
     build:
       context: ./ld_admintool
       dockerfile: Dockerfile
@@ -265,6 +266,7 @@ services:
   # LD ADMIN TOOL - Frontend (React + Vite)
   # ============================================
   admintool_frontend:
+    profiles: ["admin"]
     build:
       context: ./ld_admintool_frontend
       dockerfile: Dockerfile
