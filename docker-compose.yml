@@ -35,8 +35,9 @@ services:
     networks: 
     - qrapids
     restart: always
+    stop_grace_period: 60s
     healthcheck:
-      test: ["CMD-SHELL" "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -71,17 +72,21 @@ services:
     - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     networks:
     - qrapids
+    stop_grace_period: 60s
+    command: ["mongod", "--config", "/etc/mongod.conf", "--wiredTigerCacheSizeGB", "0.25"]
+    mem_limit: 768m
+    restart: unless-stopped
 
   tomcat:
     build:
       context: ./node-tomcat
     container_name: qrapids_tomcat
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || wget --spider -q http://localhost:8080/ || exit 1"]
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/api/serverUrl || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 20
-      start_period: 60s
+      retries: 5
+      start_period: 120s
     environment:
     - QRAPIDS_CONFIG_DIR
     - QRAPIDS_DATA_DIR
@@ -202,6 +207,7 @@ services:
         condition: service_started
     ports:
       - "127.0.0.1:5000:5000"  
+    restart: unless-stopped
     
   ld_eval:
     build:
@@ -225,7 +231,8 @@ services:
     ports:
       - "127.0.0.1:5001:5001"
     extra_hosts:
-      - "host.docker.internal:host-gateway"    
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped    
 
   # ============================================
   # LD ADMIN TOOL - Backend (Spring Boot)
@@ -291,8 +298,23 @@ services:
       options:
         max-size: "100m"
         max-file: "2"
-
   
+  # ============================================
+  # AUTOHEAL
+  # ============================================
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: ld_autoheal
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_INTERVAL=30
+      - AUTOHEAL_START_PERIOD=120
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - qrapids
   
 networks:
   qrapids:
