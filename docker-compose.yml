@@ -35,7 +35,12 @@ services:
     networks: 
     - qrapids
     restart: always
-
+    healthcheck:
+      test: ["CMD-SHELL" "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
 
   mongodb:
     build:
@@ -152,11 +157,6 @@ services:
       options:
         max-size: "1g"
         max-file: "2"
-    links:
-    - db
-    external_links: 
-    - mongodb
-    - rbase
     volumes:
     - ${COMPOSE_PROJECT_HOME}/www/api/log:/usr/local/tomcat/logs
     - ${COMPOSE_PROJECT_HOME}/www/api/public:/usr/local/tomcat/webapps
@@ -166,6 +166,12 @@ services:
     networks:
     - qrapids
     - ld-taiga
+    depends_on:
+      db:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
 
   ld_connect:
     build:
