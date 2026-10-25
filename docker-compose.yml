@@ -34,8 +34,9 @@ services:
     - postgresql:/var/lib/postgresql/data
     networks: 
     - qrapids
-    restart: always
+    restart: unless-stopped
     stop_grace_period: 60s
+    mem_limit: 512m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -177,6 +178,8 @@ services:
       mongodb:
         condition: service_healthy
     restart: unless-stopped
+    stop_grace_period: 45s
+    mem_limit: 1800m
 
   ld_connect:
     build:
@@ -208,6 +211,7 @@ services:
     ports:
       - "127.0.0.1:5000:5000"  
     restart: unless-stopped
+    mem_limit: 256m
     
   ld_eval:
     build:
@@ -232,7 +236,8 @@ services:
       - "127.0.0.1:5001:5001"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    restart: unless-stopped    
+    restart: unless-stopped
+    mem_limit: 512m
 
   # ============================================
   # LD ADMIN TOOL - Backend (Spring Boot)
@@ -256,12 +261,14 @@ services:
       - TAIGA_API_URL=${TAIGA_API_URL}
       - TAIGA_TOKEN=${TAIGA_TOKEN}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      # Keep the JVM heap bounded; without this it takes 25% of the container limit by default.
+      - JAVA_TOOL_OPTIONS=-Xmx384m -XX:MaxMetaspaceSize=128m
     networks:
       - qrapids
       - ld-taiga
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
       ld_eval:
         condition: service_started
       tomcat:
@@ -269,6 +276,7 @@ services:
     ports:
       - "127.0.0.1:${ADMINTOOL_PORT:-8080}:8080"
     restart: unless-stopped
+    mem_limit: 640m
     logging:
       driver: "json-file"
       options:
@@ -293,6 +301,7 @@ services:
     ports:
       - "127.0.0.1:3000:80"
     restart: unless-stopped
+    mem_limit: 64m
     logging:
       driver: "json-file"
       options:
@@ -300,19 +309,23 @@ services:
         max-file: "2"
   
   # ============================================
-  # AUTOHEAL
+  # AUTOHEAL - restarts any container whose healthcheck reports "unhealthy"
   # ============================================
+  # DOCKER_SOCK must point to the daemon socket of THIS host:
+  #   rootful Docker : /var/run/docker.sock (default)
+  #   rootless Docker: /run/user/<uid>/docker.sock  (set DOCKER_SOCK in .env)
   autoheal:
     image: willfarrell/autoheal
     container_name: ld_autoheal
     restart: unless-stopped
+    mem_limit: 32m
     environment:
       - AUTOHEAL_CONTAINER_LABEL=all
       - AUTOHEAL_INTERVAL=30
       - AUTOHEAL_START_PERIOD=120
       - AUTOHEAL_DEFAULT_STOP_TIMEOUT=60
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock
     networks:
       - qrapids
   
