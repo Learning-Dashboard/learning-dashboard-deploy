@@ -49,11 +49,15 @@ services:
       context: ./node-mongodb/
     container_name: ingest_mongodb
     user: "0:0"
+    # Lightweight TCP liveness check. `mongosh` is a Node.js app (~140 MB RSS per run,
+    # more than mongod itself) and under memory pressure it times out, which made
+    # autoheal restart a perfectly working Mongo.
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand({ connectionStatus: 1 }).ok'"]
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/27017"]
       interval: 30s
-      timeout: 30s
+      timeout: 10s
       retries: 10
+      start_period: 90s
     volumes:
       - mongo_data:/data/db
       - ${COMPOSE_PROJECT_HOME}/node-mongodb/config/mongod.conf:/etc/mongod.conf
@@ -82,12 +86,14 @@ services:
     build:
       context: ./node-tomcat
     container_name: qrapids_tomcat
+    # Tolerant to memory-pressure stalls: 10 x 30s = 5 min of consecutive failures
+    # before autoheal restarts it. start_period covers wait-for-db (up to 5 min) + deploy.
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:8080/api/serverUrl || exit 1"]
+      test: ["CMD-SHELL", "curl -fs -m 25 http://localhost:8080/api/serverUrl || exit 1"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
+      timeout: 30s
+      retries: 10
+      start_period: 420s
     environment:
     - QRAPIDS_CONFIG_DIR
     - QRAPIDS_DATA_DIR
@@ -320,7 +326,7 @@ services:
     image: willfarrell/autoheal
     container_name: ld_autoheal
     restart: unless-stopped
-    mem_limit: 32m
+    mem_limit: 64m
     environment:
       - AUTOHEAL_CONTAINER_LABEL=all
       - AUTOHEAL_INTERVAL=30

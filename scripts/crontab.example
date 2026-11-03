@@ -1,0 +1,10 @@
+SHELL=/bin/bash
+LD=/home/learning-dashboard/learning-dashboard-deploy
+
+# Watchdog: recover orphans and bring the stack back up. The script sets
+# DOCKER_HOST itself; do not rely on .bashrc (cron does not load it).
+*/5 * * * * $LD/scripts/ld-watchdog.sh >> $HOME/ld-watchdog.log 2>&1
+@reboot sleep 90 && $LD/scripts/ld-watchdog.sh >> $HOME/ld-watchdog.log 2>&1
+
+# Daily dumps. Same rootless-Docker env as the watchdog.
+0 3 * * * $LD/scripts/ld-backup.sh >> $HOME/ld-backup.log 2>&1

@@ -33,6 +33,9 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Cron does not load .bashrc; reconstruct rootless Docker env.
+# shellcheck source=ld-cron-env.sh
+. "${SCRIPT_DIR}/ld-cron-env.sh"
 COMPOSE_DIR="${COMPOSE_DIR:-$(dirname "$SCRIPT_DIR")}"
 COMPOSE_PROFILES="${COMPOSE_PROFILES:-admin}"
 DRY_RUN="${WATCHDOG_DRY_RUN:-0}"
@@ -66,12 +69,19 @@ SUBUID_COUNT="${SUBUID_COUNT:-0}"
 # ---------------------------------------------------------------------------
 # 1. Daemon reachable?
 # ---------------------------------------------------------------------------
-if ! docker info >/dev/null 2>&1; then
-  log "docker daemon not reachable"
+if ! timeout 60 docker info >/dev/null 2>&1; then
+  # Distinguish "daemon dead" from "daemon alive but stalled" (memory pressure).
+  unit_state="$(systemctl --user show docker -p ActiveState -p NRestarts -p ActiveEnterTimestamp 2>/dev/null | tr '\n' ' ')"
+  pressure="$(awk '/^full/ {print $2, $3}' "/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/memory.pressure" 2>/dev/null)"
+  log "docker daemon not reachable (DOCKER_HOST=${DOCKER_HOST:-unset}; ${unit_state:-systemctl unavailable}) memory.pressure full: ${pressure:-n/a}"
   if [ "$DRY_RUN" = "1" ]; then exit 0; fi
   if command -v systemctl >/dev/null 2>&1; then
-    log "trying: systemctl --user start docker"
-    systemctl --user start docker 2>/dev/null || true
+    if [ "${unit_state#*ActiveState=}" != "" ] && [[ "$unit_state" == *"ActiveState=active"* ]]; then
+      log "daemon unit is active: stalled, not dead - leaving it alone"
+    else
+      log "trying: systemctl --user start docker"
+      systemctl --user start docker 2>/dev/null || true
+    fi
   fi
   # Give it time; the next cron run will continue.
   exit 0
