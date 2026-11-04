@@ -22,7 +22,7 @@ Es llança cada 5 minuts (i a `@reboot`). Cada execució:
 
 1. Comprova que el daemon respon (`docker info`, timeout 60 s). Si la unitat systemd està parada, fa `systemctl --user start docker`. Si està `active` però no respon, la deixa: està penjat per pressió de memòria, no mort.
 2. Cerca processos `postgres` / `mongod` / `java` / `gunicorn` / `nginx` d’aquest usuari (o del seu rang de subuid) que Docker ja no controla. Són **orfes**: el daemon ha caigut, els shims han mort i els processos han quedat vius amb el volum de dades obert. Els atura net (`SIGINT` a Postgres, `SIGTERM` a la resta) i espera fins a 90 s.
-3. Només si no queda cap orfe, fa `docker compose up -d` (perfil `admin`) perquè tot el que estigui parat torni a arrencar. Si un orfe no mor, **no** aixeca l’stack: dos `postgres` sobre el mateix volum corrompen les dades.
+3. Només si no queda cap orfe, fa `docker compose up -d` **sense** el perfil `admin`: aixeca l’stack de servei (db, mongodb, tomcat, ld_connect, ld_eval, autoheal) i deixa `admintool_*` com estiguin. Si un orfe no mor, **no** aixeca l’stack: dos `postgres` sobre el mateix volum corrompen les dades.
 
 Només toca processos d’aquest usuari. Un sol exemplar alhora (lock). El log (`~/ld-watchdog.log`) està buit si tot va bé; només escriu quan actua.
 
@@ -31,7 +31,14 @@ Només toca processos d’aquest usuari. Un sol exemplar alhora (lock). El log (
 WATCHDOG_DRY_RUN=1 env -i HOME=$HOME PATH=/usr/bin:/bin bash scripts/ld-watchdog.sh
 ```
 
-Variables opcionals: `COMPOSE_DIR`, `COMPOSE_PROFILES` (per defecte `admin`), `WATCHDOG_DRY_RUN=1`.
+Variables opcionals: `COMPOSE_DIR`, `COMPOSE_PROFILES` (buit per defecte; no aixeca l’Admin Tool), `WATCHDOG_DRY_RUN=1`.
+
+L’Admin Tool s’engega i s’atura a mà i no forma part de l’stack que el watchdog manté amunt:
+
+```bash
+docker compose --profile admin up -d      # backend + frontend
+docker compose --profile admin stop       # els deixa parats (no tornen amb el watchdog)
+```
 
 ## `ld-backup.sh`
 

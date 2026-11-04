@@ -26,7 +26,10 @@
 #
 # Environment overrides:
 #   COMPOSE_DIR        directory with docker-compose.yml (default: parent of this script)
-#   COMPOSE_PROFILES   compose profiles to bring up (default: admin)
+#   COMPOSE_PROFILES   extra compose profiles to bring up (default: none).
+#                      The Admin Tool (profile "admin") is started by hand:
+#                        docker compose --profile admin up -d
+#                        docker compose --profile admin stop
 #   WATCHDOG_DRY_RUN=1 only report, do not kill or start anything
 # =============================================================================
 
@@ -37,7 +40,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=ld-cron-env.sh
 . "${SCRIPT_DIR}/ld-cron-env.sh"
 COMPOSE_DIR="${COMPOSE_DIR:-$(dirname "$SCRIPT_DIR")}"
-COMPOSE_PROFILES="${COMPOSE_PROFILES:-admin}"
+# Core stack only. Do not default to "admin": admintool_* are started/stopped by hand.
+COMPOSE_PROFILES="${COMPOSE_PROFILES:-}"
 DRY_RUN="${WATCHDOG_DRY_RUN:-0}"
 LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/ld-watchdog.lock"
 ORPHAN_WAIT_SECONDS=90
@@ -56,7 +60,11 @@ if ! flock -n 9; then
   exit 0
 fi
 
-export COMPOSE_PROFILES
+if [ -n "$COMPOSE_PROFILES" ]; then
+  export COMPOSE_PROFILES
+else
+  unset COMPOSE_PROFILES
+fi
 cd "$COMPOSE_DIR" || { log "ERROR: cannot cd to $COMPOSE_DIR"; exit 1; }
 
 MY_UID="$(id -u)"
@@ -202,14 +210,27 @@ if [ "$DRY_RUN" = "1" ]; then
   exit 0
 fi
 
-# Avoid noisy logs: only call `up` if something is not running.
-NOT_RUNNING="$(docker compose ps -a --format '{{.Name}}\t{{.State}}' 2>/dev/null | awk -F'\t' '$2!="running"')"
-EXPECTED="$(docker compose config --services 2>/dev/null | wc -l)"
-RUNNING="$(docker compose ps --status running -q 2>/dev/null | wc -l)"
+# Only the default-profile services (not admintool_*). Stopped admin containers
+# must not trigger `up -d` every five minutes.
+DEFAULT_SERVICES="$(docker compose config --services 2>/dev/null || true)"
+NOT_RUNNING="$(docker compose ps -a --format '{{.Service}}\t{{.State}}' 2>/dev/null | awk -F'\t' -v list="$DEFAULT_SERVICES" '
+BEGIN { n=split(list, a, "\n"); for (i = 1; i <= n; i++) if (a[i] != "") want[a[i]] = 1 }
+($1 in want) && $2 != "running" { print $1 "\t" $2 }
+')"
+EXPECTED="$(printf '%s\n' "$DEFAULT_SERVICES" | grep -c . || true)"
+RUNNING="$(docker compose ps --status running --format '{{.Service}}' 2>/dev/null | awk -v list="$DEFAULT_SERVICES" '
+BEGIN { n=split(list, a, "\n"); for (i = 1; i <= n; i++) if (a[i] != "") want[a[i]] = 1 }
+$0 in want { c++ }
+END { print c+0 }
+')"
 
 if [ -n "$NOT_RUNNING" ] || [ "$RUNNING" -lt "$EXPECTED" ]; then
   [ -n "$NOT_RUNNING" ] && log "not running:"$'\n'"$NOT_RUNNING"
-  log "running: docker compose up -d (profiles: $COMPOSE_PROFILES)"
+  if [ -n "${COMPOSE_PROFILES:-}" ]; then
+    log "running: docker compose up -d (profiles: $COMPOSE_PROFILES)"
+  else
+    log "running: docker compose up -d (core stack, no admin profile)"
+  fi
   docker network inspect ld-taiga >/dev/null 2>&1 || docker network create ld-taiga >/dev/null 2>&1 || true
   docker compose up -d 2>&1 | sed 's/^/    /'
 fi

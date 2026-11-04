@@ -142,6 +142,13 @@ docker compose up -d
 
 Use `docker compose` **without a hyphen**. That is the current Docker Compose v2 syntax.
 
+This starts the core stack (`db`, `mongodb`, `tomcat`, `ld_connect`, `ld_eval`, `autoheal`). The Admin Tool is optional and is started by hand:
+
+```bash
+docker compose --profile admin up -d      # backend + frontend
+docker compose --profile admin stop       # leave them down; the watchdog will not bring them back
+```
+
 ### 5. Verify everything is working
 
 ```bash
@@ -239,13 +246,9 @@ GitHub and Taiga webhooks automatically send events to LD Connect when changes o
 ### Rebuild a specific service
 
 ```bash
-# Admin Tool Backend
-docker compose build admintool_backend
-docker compose up -d admintool_backend
-
-# Admin Tool Frontend
-docker compose build admintool_frontend
-docker compose up -d admintool_frontend
+# Admin Tool (profile "admin"; not started by a plain `up -d`)
+docker compose --profile admin build admintool_backend admintool_frontend
+docker compose --profile admin up -d admintool_backend admintool_frontend
 
 # LD Connect
 docker compose build ld_connect

@@ -250,6 +250,9 @@ services:
   # ============================================
   # LD ADMIN TOOL - Backend (Spring Boot)
   # ============================================
+  # Profile "admin": not started by `docker compose up -d` nor by ld-watchdog.
+  #   docker compose --profile admin up -d
+  #   docker compose --profile admin stop
   admintool_backend:
     profiles: ["admin"]
     build:
@@ -294,6 +297,7 @@ services:
   # ============================================
   # LD ADMIN TOOL - Frontend (React + Vite)
   # ============================================
+  # Same "admin" profile as the backend; start/stop both together (see above).
   admintool_frontend:
     profiles: ["admin"]
     build:
